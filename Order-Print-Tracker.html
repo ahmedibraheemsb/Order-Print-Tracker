@@ -256,6 +256,20 @@ input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; accent-colo
   max-width: 800px; margin: 0 auto;
 }
 .invoice-page:last-child { page-break-after: auto; }
+
+/* ── Count Toggle Group ── */
+.count-toggle-group {
+  display: flex; border: 1px solid var(--border-strong); border-radius: var(--radius-sm);
+  overflow: hidden;
+}
+.count-toggle {
+  padding: 7px 14px; font-family: 'IBM Plex Mono', monospace; font-size: 13px; font-weight: 700;
+  cursor: pointer; border: none; border-left: 1px solid var(--border-strong);
+  background: var(--surface); color: var(--text-secondary); transition: all .15s;
+}
+.count-toggle:first-child { border-left: none; }
+.count-toggle:hover:not(.active) { background: var(--surface-2); }
+.count-toggle.active { background: var(--accent); color: #fff; }
 </style>
 </head>
 <body>
@@ -337,12 +351,11 @@ input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; accent-colo
         </div>
         <div class="filter-group">
           <span class="filter-label">مرات الطباعة</span>
-          <select id="filterPrintCount" onchange="applyPrintFilters()">
-            <option value="all">الكل</option>
-            <option value="0">لم يُطبع</option>
-            <option value="1">مرة واحدة</option>
-            <option value="2+">أكثر من مرة</option>
-          </select>
+          <div class="count-toggle-group" id="countToggleGroup">
+            <button class="count-toggle active" data-val="0" onclick="toggleCountFilter('0')">0</button>
+            <button class="count-toggle" data-val="1" onclick="toggleCountFilter('1')">1</button>
+            <button class="count-toggle" data-val="2+" onclick="toggleCountFilter('2+')">&gt;1</button>
+          </div>
         </div>
         <button class="btn btn-ghost btn-sm" onclick="clearPrintFilters()">مسح</button>
         <div class="spacer"></div>
@@ -525,7 +538,7 @@ input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; accent-colo
     <p class="confirm-question">هل أنت متأكد من أنك تريد طباعتها مرة أخرى؟</p>
     <div class="modal-actions" style="margin-top:20px;">
       <button class="btn btn-ghost" onclick="closeConfirm()">إلغاء</button>
-      <button class="btn btn-danger" id="confirmPrintBtn">🖨️ أطبع</button>
+      <button class="btn btn-danger" id="confirmPrintBtn">🖨️ نعم أريد الطباعة مرة أخرى</button>
     </div>
   </div>
 </div>
@@ -655,17 +668,42 @@ function updatePrintKPIs() {
   document.getElementById("kpiS2").textContent = allOrders.filter(o=>o.type==="S2").length.toLocaleString("en-US");
 }
 
+// Active count filters (multi-select toggles)
+let activeCountFilters = new Set(["0"]); // default: show unprinted
+
+function toggleCountFilter(val) {
+  if (activeCountFilters.has(val)) {
+    if (activeCountFilters.size === 1) return; // keep at least one active
+    activeCountFilters.delete(val);
+  } else {
+    activeCountFilters.add(val);
+  }
+  // Update button styles
+  document.querySelectorAll(".count-toggle").forEach(btn => {
+    btn.classList.toggle("active", activeCountFilters.has(btn.dataset.val));
+  });
+  applyPrintFilters();
+}
+
 function applyPrintFilters() {
   const orderQ = document.getElementById("filterOrder").value.trim().replace("#","");
   const typeQ  = document.getElementById("filterType").value;
-  const countQ = document.getElementById("filterPrintCount").value;
 
   filteredOrders = allOrders;
-  if (orderQ)           filteredOrders = filteredOrders.filter(o => o.name.replace("#","").includes(orderQ));
-  if (typeQ !== "all")  filteredOrders = filteredOrders.filter(o => o.type === typeQ);
-  if (countQ === "0")   filteredOrders = filteredOrders.filter(o => getPrintCount(o) === 0);
-  if (countQ === "1")   filteredOrders = filteredOrders.filter(o => getPrintCount(o) === 1);
-  if (countQ === "2+")  filteredOrders = filteredOrders.filter(o => getPrintCount(o) >= 2);
+  if (orderQ)          filteredOrders = filteredOrders.filter(o => o.name.replace("#","").includes(orderQ));
+  if (typeQ !== "all") filteredOrders = filteredOrders.filter(o => o.type === typeQ);
+
+  // Count filter — multi-select
+  const all3 = activeCountFilters.has("0") && activeCountFilters.has("1") && activeCountFilters.has("2+");
+  if (!all3) {
+    filteredOrders = filteredOrders.filter(o => {
+      const c = getPrintCount(o);
+      if (activeCountFilters.has("0")  && c === 0)  return true;
+      if (activeCountFilters.has("1")  && c === 1)  return true;
+      if (activeCountFilters.has("2+") && c >= 2)   return true;
+      return false;
+    });
+  }
 
   document.getElementById("printResultCount").textContent = filteredOrders.length.toLocaleString("en-US") + " نتيجة";
   renderPrintTable();
@@ -673,9 +711,13 @@ function applyPrintFilters() {
 }
 
 function clearPrintFilters() {
-  document.getElementById("filterOrder").value      = "";
-  document.getElementById("filterType").value       = "all";
-  document.getElementById("filterPrintCount").value = "all";
+  document.getElementById("filterOrder").value = "";
+  document.getElementById("filterType").value  = "all";
+  // Reset toggles to default (0 only)
+  activeCountFilters = new Set(["0"]);
+  document.querySelectorAll(".count-toggle").forEach(btn => {
+    btn.classList.toggle("active", btn.dataset.val === "0");
+  });
   applyPrintFilters();
 }
 
@@ -709,7 +751,7 @@ function renderPrintTable() {
       <td>${escHtml(o.customer)}</td>
       <td style="font-size:12px;">${formatDate(o.createdAt)}</td>
       <td><span class="type-badge ${typeClass}">${typeLabel}</span></td>
-      <td style="font-size:12px;">${escHtml(o.status)}</td>
+      <td style="font-size:12px;">${statusCell(o.status)}</td>
       <td class="center"><span class="count-badge ${countClass}">${countLabel}</span></td>
     </tr>`;
   }).join("");
@@ -850,7 +892,7 @@ async function executePrint(selectedOrders) {
     hidePrintLoading();
     window.print();
 
-    // Update print counts locally
+    // Update print counts locally (optimistic)
     for (const inv of invoices) {
       const num = inv.name.replace("#","");
       printCountsMap[num] = (printCountsMap[num] || 0) + 1;
@@ -859,7 +901,11 @@ async function executePrint(selectedOrders) {
     updatePrintKPIs();
     applyPrintFilters();
 
-    // Refresh logs
+    // Auto-refresh from Shopify after 5s (status changed to Ready)
+    showPrintLoading("تم الطباعة ✓ جاري تحديث القائمة...");
+    await new Promise(r => setTimeout(r, 5000));
+    hidePrintLoading();
+    await loadOrders(true);
     if (logsLoaded) loadLogs();
 
   } catch (err) {
@@ -1203,6 +1249,16 @@ function renderFooter() {
 // ══════════════════════════════════════════════════════════════════════════════
 // Helpers
 // ══════════════════════════════════════════════════════════════════════════════
+function statusCell(status) {
+  if (status === "Confirmed + Edit") {
+    return '<span style="display:inline-flex;align-items:center;gap:4px;">'
+      + '<span style="background:#fef3c7;color:#92400e;font-size:10px;font-weight:700;padding:2px 6px;border-radius:4px;border:1px solid #fcd34d;">✏️ Edit</span>'
+      + escHtml(status)
+      + '</span>';
+  }
+  return escHtml(status);
+}
+
 function money(n) {
   const v = parseFloat(n) || 0;
   return v % 1 === 0 ? v.toLocaleString("en-US") : v.toLocaleString("en-US", { minimumFractionDigits:2, maximumFractionDigits:2 });
@@ -1230,6 +1286,13 @@ function formatInvoiceDate(iso) {
 // Init
 // ══════════════════════════════════════════════════════════════════════════════
 window.addEventListener("load", () => {
+  // Always start on print tab
+  currentTab = "print";
+  document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
+  document.querySelectorAll(".tab-panel").forEach(p => p.classList.remove("active"));
+  document.querySelectorAll(".tab-btn").forEach((b,i) => { if(i===0) b.classList.add("active"); });
+  document.getElementById("tab-print").classList.add("active");
+
   if (!isConfigured()) { openSettings(); return; }
   loadOrders();
 });
