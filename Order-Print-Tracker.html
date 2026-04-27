@@ -573,8 +573,7 @@ function saveSettings() {
 // ══════════════════════════════════════════════════════════════════════════════
 let currentTab   = "print";
 let logsLoaded   = false;
-let printLastUpdated = "";
-let logsLastUpdated  = "";
+let lastUpdatedText = "";
 
 function switchTab(tab, btn) {
   currentTab = tab;
@@ -582,13 +581,12 @@ function switchTab(tab, btn) {
   document.querySelectorAll(".tab-panel").forEach(p => p.classList.remove("active"));
   btn.classList.add("active");
   document.getElementById(`tab-${tab}`).classList.add("active");
-  document.getElementById("lastUpdated").textContent =
-    tab === "print" ? printLastUpdated : logsLastUpdated;
+  document.getElementById("lastUpdated").textContent = lastUpdatedText;
   if (tab === "logs" && !logsLoaded) loadLogs();
 }
 function handleRefresh() {
-  if (currentTab === "print") loadOrders(true);
-  else loadLogs();
+  loadOrders(true);
+  loadLogs();
 }
 
 // ══════════════════════════════════════════════════════════════════════════════
@@ -649,8 +647,8 @@ async function loadOrders(forceRefresh = false) {
 
     updatePrintKPIs();
     applyPrintFilters();
-    printLastUpdated = "آخر تحديث: " + formatDateTime(ordersData.cachedAt || new Date().toISOString());
-    document.getElementById("lastUpdated").textContent = printLastUpdated;
+    lastUpdatedText = "آخر تحديث: " + formatDateTime(new Date().toISOString());
+    document.getElementById("lastUpdated").textContent = lastUpdatedText;
     showPrint("printDashboard");
   } catch (err) {
     document.getElementById("printErrorMsg").textContent = err.message;
@@ -949,8 +947,8 @@ async function loadLogs() {
     updateLogKPIs();
     applyLogFilters();
     applyPrintFilters();
-    logsLastUpdated = "آخر تحديث: " + formatDateTime(new Date().toISOString());
-    if (currentTab === "logs") document.getElementById("lastUpdated").textContent = logsLastUpdated;
+    lastUpdatedText = "آخر تحديث: " + formatDateTime(new Date().toISOString());
+    document.getElementById("lastUpdated").textContent = lastUpdatedText;
     showLogs("logsDashboard");
   } catch (err) {
     document.getElementById("logsErrorMsg").textContent = err.message;
@@ -1294,7 +1292,9 @@ window.addEventListener("load", () => {
   document.getElementById("tab-print").classList.add("active");
 
   if (!isConfigured()) { openSettings(); return; }
+  // Load both tabs on startup — logs tab never appears empty
   loadOrders();
+  loadLogs();
 });
 </script>
 </body>
