@@ -1,0 +1,652 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>سجل الطباعة — EcomModa</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Arabic:wght@300;400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.3.0/exceljs.min.js"></script>
+<style>
+:root {
+  --bg:           #f3f4f6;
+  --surface:      #ffffff;
+  --surface-2:    #f9fafb;
+  --border:       #e5e7eb;
+  --border-strong:#d1d5db;
+  --text-primary:   #111827;
+  --text-secondary: #6b7280;
+  --text-muted:     #6b7280;
+  --accent:        #2563eb;
+  --accent-light:  #eff6ff;
+  --accent-dark:   #1d4ed8;
+  --green:         #16a34a;
+  --green-light:   #f0fdf4;
+  --green-border:  #86efac;
+  --red:           #dc2626;
+  --red-light:     #fef2f2;
+  --red-border:    #fca5a5;
+  --amber:         #d97706;
+  --amber-light:   #fffbeb;
+  --radius:    12px;
+  --radius-sm: 8px;
+  --shadow:    0 1px 3px rgba(0,0,0,.07), 0 1px 2px rgba(0,0,0,.04);
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: 'Noto Sans Arabic', -apple-system, sans-serif;
+  background: var(--bg);
+  color: var(--text-primary);
+  font-size: 14px;
+  min-height: 100vh;
+}
+
+/* ── Header ─────────────────────────────────────────────────────────────────── */
+.app-header {
+  position: sticky; top: 0; z-index: 100;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  padding: 12px 20px;
+  display: flex; align-items: center; justify-content: space-between;
+  box-shadow: var(--shadow);
+}
+.header-brand { display: flex; align-items: center; gap: 10px; }
+.header-brand h1 { font-size: 17px; font-weight: 700; }
+.header-badge {
+  background: var(--accent-light);
+  color: var(--accent);
+  font-size: 12px; font-weight: 600;
+  padding: 3px 10px; border-radius: 20px;
+}
+.header-actions { display: flex; gap: 8px; align-items: center; }
+
+/* ── Buttons ─────────────────────────────────────────────────────────────────── */
+.btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 8px 14px; border-radius: var(--radius-sm);
+  font-family: inherit; font-size: 13px; font-weight: 600;
+  cursor: pointer; border: none; transition: all .15s;
+}
+.btn-primary { background: var(--accent); color: #fff; }
+.btn-primary:hover { background: var(--accent-dark); }
+.btn-ghost { background: transparent; color: var(--text-secondary); border: 1px solid var(--border-strong); }
+.btn-ghost:hover { background: var(--surface-2); }
+.btn-sm { padding: 5px 10px; font-size: 12px; }
+
+/* ── Main ────────────────────────────────────────────────────────────────────── */
+.main { padding: 20px; max-width: 1300px; margin: 0 auto; }
+
+/* ── States ──────────────────────────────────────────────────────────────────── */
+.state-box {
+  background: var(--surface); border-radius: var(--radius);
+  padding: 60px 20px; text-align: center;
+  display: flex; flex-direction: column; align-items: center; gap: 14px;
+  box-shadow: var(--shadow);
+}
+.state-box.error { border: 1px solid var(--red-border); }
+.state-icon { font-size: 40px; }
+.state-msg { color: var(--text-secondary); font-size: 14px; }
+.spinner {
+  width: 36px; height: 36px;
+  border: 3px solid var(--border); border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: spin .7s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ── KPI Grid ────────────────────────────────────────────────────────────────── */
+.kpi-grid {
+  display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px;
+  margin-bottom: 20px;
+}
+.kpi-card {
+  background: var(--surface); border-radius: var(--radius);
+  padding: 18px 20px; box-shadow: var(--shadow);
+  border: 1px solid var(--border);
+}
+.kpi-value {
+  font-size: 32px; font-weight: 800; line-height: 1;
+  font-family: 'IBM Plex Mono', monospace;
+  color: var(--text-primary);
+}
+.kpi-label { font-size: 12px; color: var(--text-secondary); margin-top: 6px; }
+.kpi-card.accent .kpi-value  { color: var(--accent); }
+.kpi-card.green  .kpi-value  { color: var(--green); }
+.kpi-card.amber  .kpi-value  { color: var(--amber); }
+.kpi-card.red    .kpi-value  { color: var(--red); }
+
+/* ── Filters ──────────────────────────────────────────────────────────────────── */
+.filters-bar {
+  background: var(--surface); border-radius: var(--radius);
+  padding: 14px 18px; margin-bottom: 16px;
+  display: flex; gap: 12px; align-items: center; flex-wrap: wrap;
+  box-shadow: var(--shadow); border: 1px solid var(--border);
+}
+.filter-group { display: flex; align-items: center; gap: 8px; }
+.filter-label { font-size: 12px; color: var(--text-secondary); font-weight: 600; white-space: nowrap; }
+
+input[type="text"], input[type="date"], select {
+  font-family: inherit; font-size: 13px;
+  border: 1px solid var(--border-strong); border-radius: var(--radius-sm);
+  padding: 7px 10px; color: var(--text-primary);
+  background: var(--surface); outline: none;
+  transition: border-color .15s;
+}
+input[type="text"]:focus, input[type="date"]:focus, select:focus {
+  border-color: var(--accent);
+}
+input[type="text"].order-search {
+  font-family: 'IBM Plex Mono', monospace;
+  direction: ltr; width: 130px;
+}
+.filters-bar .spacer { flex: 1; }
+.result-count { font-size: 12px; color: var(--text-muted); white-space: nowrap; }
+
+/* ── Table ────────────────────────────────────────────────────────────────────── */
+.table-card {
+  background: var(--surface); border-radius: var(--radius);
+  box-shadow: var(--shadow); border: 1px solid var(--border);
+  overflow: hidden;
+}
+.table-wrap { overflow-x: auto; }
+table {
+  width: 100%; border-collapse: collapse;
+  font-size: 13px;
+}
+thead { background: var(--surface-2); }
+th {
+  padding: 11px 14px; text-align: right;
+  font-size: 11px; font-weight: 700; color: var(--text-secondary);
+  text-transform: uppercase; letter-spacing: .04em;
+  border-bottom: 1px solid var(--border);
+  white-space: nowrap;
+}
+td {
+  padding: 11px 14px; border-bottom: 1px solid var(--border);
+  vertical-align: middle;
+}
+tr:last-child td { border-bottom: none; }
+tr:hover td { background: var(--surface-2); }
+
+.mono {
+  font-family: 'IBM Plex Mono', monospace;
+  direction: ltr; display: inline-block;
+}
+.type-badge {
+  display: inline-flex; align-items: center;
+  padding: 3px 10px; border-radius: 20px;
+  font-size: 11px; font-weight: 700;
+  font-family: 'IBM Plex Mono', monospace;
+}
+.type-s1 { background: var(--accent-light); color: var(--accent); }
+.type-s2 { background: var(--amber-light);  color: var(--amber); }
+
+.dup-badge {
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 2px 8px; border-radius: 20px;
+  background: var(--red-light); color: var(--red);
+  font-size: 11px; font-weight: 700;
+  margin-right: 6px;
+}
+.count-badge {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 22px; height: 22px; border-radius: 50%;
+  font-size: 11px; font-weight: 700;
+  font-family: 'IBM Plex Mono', monospace;
+}
+.count-1 { background: var(--green-light);  color: var(--green); }
+.count-2 { background: var(--amber-light);  color: var(--amber); }
+.count-3 { background: var(--red-light);    color: var(--red); }
+
+/* ── Empty / Footer ──────────────────────────────────────────────────────────── */
+.table-empty {
+  text-align: center; padding: 50px 20px;
+  color: var(--text-muted); font-size: 14px;
+}
+.table-footer {
+  padding: 10px 16px; border-top: 1px solid var(--border);
+  font-size: 12px; color: var(--text-muted); text-align: right;
+}
+
+/* ── Modal ────────────────────────────────────────────────────────────────────── */
+.overlay {
+  position: fixed; inset: 0; background: rgba(0,0,0,.4);
+  z-index: 200; display: none; align-items: center; justify-content: center;
+}
+.overlay.open { display: flex; }
+.modal {
+  background: var(--surface); border-radius: var(--radius);
+  padding: 24px; width: 440px; max-width: 95vw;
+  box-shadow: 0 20px 40px rgba(0,0,0,.15);
+}
+.modal-header {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 20px;
+}
+.modal-title { font-size: 16px; font-weight: 700; }
+.modal-close {
+  background: none; border: none; cursor: pointer;
+  font-size: 20px; color: var(--text-muted); line-height: 1;
+}
+.form-group { margin-bottom: 14px; }
+.form-label { font-size: 12px; font-weight: 600; color: var(--text-secondary); margin-bottom: 6px; display: block; }
+.form-input {
+  width: 100%; font-family: 'IBM Plex Mono', monospace;
+  font-size: 13px; padding: 9px 12px;
+  border: 1px solid var(--border-strong); border-radius: var(--radius-sm);
+  background: var(--surface); color: var(--text-primary); outline: none;
+  direction: ltr;
+}
+.form-input:focus { border-color: var(--accent); }
+.modal-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px; }
+
+/* ── Responsive ──────────────────────────────────────────────────────────────── */
+@media (max-width: 768px) {
+  .kpi-grid { grid-template-columns: repeat(2, 1fr); }
+  .filters-bar { flex-direction: column; align-items: stretch; }
+}
+@media (max-width: 480px) {
+  .kpi-grid { grid-template-columns: 1fr 1fr; }
+}
+</style>
+</head>
+<body>
+
+<!-- ── Header ──────────────────────────────────────────────────────────────────── -->
+<header class="app-header">
+  <div class="header-brand">
+    <span>🖨️</span>
+    <h1>سجل الطباعة</h1>
+    <span class="header-badge" id="totalBadge">—</span>
+  </div>
+  <div class="header-actions">
+    <span id="lastUpdated" style="font-size:12px; color:var(--text-muted);"></span>
+    <button class="btn btn-ghost btn-sm" onclick="loadLogs()">🔄 تحديث</button>
+    <button class="btn btn-ghost btn-sm" onclick="exportXLSX()">📥 تصدير</button>
+    <button class="btn btn-ghost btn-sm" onclick="openSettings()">⚙️ إعدادات</button>
+  </div>
+</header>
+
+<!-- ── Main ────────────────────────────────────────────────────────────────────── -->
+<main class="main">
+
+  <!-- Loading -->
+  <div id="loadingState" class="state-box" style="display:none;">
+    <div class="spinner"></div>
+    <p class="state-msg">جاري جلب سجل الطباعة...</p>
+  </div>
+
+  <!-- Error -->
+  <div id="errorState" class="state-box error" style="display:none;">
+    <div class="state-icon">⚠️</div>
+    <p id="errorMsg" class="state-msg">فشل الاتصال بالـ Worker</p>
+    <button class="btn btn-ghost" onclick="loadLogs()">إعادة المحاولة</button>
+  </div>
+
+  <!-- Dashboard -->
+  <div id="dashboard" style="display:none;">
+
+    <!-- KPIs -->
+    <div class="kpi-grid">
+      <div class="kpi-card accent">
+        <div class="kpi-value" id="kpiTotal">0</div>
+        <div class="kpi-label">إجمالي عمليات الطباعة</div>
+      </div>
+      <div class="kpi-card green">
+        <div class="kpi-value" id="kpiToday">0</div>
+        <div class="kpi-label">اليوم</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-value" id="kpiS1">0</div>
+        <div class="kpi-label">أوردرات عادية (S1)</div>
+      </div>
+      <div class="kpi-card amber">
+        <div class="kpi-value" id="kpiS2">0</div>
+        <div class="kpi-label">استبدال / إرجاع (S2)</div>
+      </div>
+      <div class="kpi-card red">
+        <div class="kpi-value" id="kpiDup">0</div>
+        <div class="kpi-label">أوردرات طُبعت أكثر من مرة</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-value" id="kpiUniq">0</div>
+        <div class="kpi-label">أوردرات فريدة</div>
+      </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="filters-bar">
+      <div class="filter-group">
+        <span class="filter-label">رقم الأوردر</span>
+        <input type="text" class="order-search" id="filterOrder" placeholder="#40000" oninput="applyFilters()">
+      </div>
+      <div class="filter-group">
+        <span class="filter-label">النوع</span>
+        <select id="filterType" onchange="applyFilters()">
+          <option value="all">الكل</option>
+          <option value="S1">S1 — عادي</option>
+          <option value="S2">S2 — استبدال</option>
+        </select>
+      </div>
+      <div class="filter-group">
+        <span class="filter-label">من</span>
+        <input type="date" id="filterFrom" onchange="applyFilters()">
+      </div>
+      <div class="filter-group">
+        <span class="filter-label">إلى</span>
+        <input type="date" id="filterTo" onchange="applyFilters()">
+      </div>
+      <button class="btn btn-ghost btn-sm" onclick="clearFilters()">مسح الفلاتر</button>
+      <div class="spacer"></div>
+      <span class="result-count" id="resultCount"></span>
+    </div>
+
+    <!-- Table -->
+    <div class="table-card">
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>رقم الأوردر</th>
+              <th>نوع الفاتورة</th>
+              <th>التاريخ والوقت</th>
+              <th style="text-align:center;">عدد مرات الطباعة</th>
+              <th>ملاحظة</th>
+            </tr>
+          </thead>
+          <tbody id="tableBody"></tbody>
+        </table>
+        <div class="table-empty" id="tableEmpty" style="display:none;">
+          لا توجد نتائج تطابق الفلاتر المحددة
+        </div>
+      </div>
+      <div class="table-footer" id="tableFooter"></div>
+    </div>
+
+  </div><!-- /dashboard -->
+</main>
+
+<!-- ── Settings Modal ───────────────────────────────────────────────────────── -->
+<div class="overlay" id="settingsOverlay">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title">⚙️ إعدادات الاتصال</span>
+      <button class="modal-close" onclick="closeSettings()">✕</button>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Worker URL</label>
+      <input class="form-input" id="cfgUrl" type="text" placeholder="https://print-tracker-worker.ecommoda24.workers.dev">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Worker Secret</label>
+      <input class="form-input" id="cfgSecret" type="password" placeholder="••••••••••••">
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeSettings()">إلغاء</button>
+      <button class="btn btn-primary" onclick="saveSettings()">حفظ وتحميل</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── Config ────────────────────────────────────────────────────────────────────
+const CFG_KEY = "print_tracker_config";
+
+function getConfig() {
+  try { return JSON.parse(localStorage.getItem(CFG_KEY)) || {}; }
+  catch { return {}; }
+}
+function saveConfig(cfg) { localStorage.setItem(CFG_KEY, JSON.stringify(cfg)); }
+function isConfigured() {
+  const c = getConfig();
+  return c.workerUrl?.startsWith("http") && c.secret?.length > 0;
+}
+
+// ── Settings Modal ────────────────────────────────────────────────────────────
+function openSettings() {
+  const c = getConfig();
+  document.getElementById("cfgUrl").value    = c.workerUrl || "";
+  document.getElementById("cfgSecret").value = c.secret    || "";
+  document.getElementById("settingsOverlay").classList.add("open");
+}
+function closeSettings() {
+  document.getElementById("settingsOverlay").classList.remove("open");
+}
+function saveSettings() {
+  const url    = document.getElementById("cfgUrl").value.trim().replace(/\/$/, "");
+  const secret = document.getElementById("cfgSecret").value.trim();
+  if (!url || !secret) { alert("برجاء إدخال الـ URL والـ Secret"); return; }
+  saveConfig({ workerUrl: url, secret });
+  closeSettings();
+  loadLogs();
+}
+
+// ── Data ──────────────────────────────────────────────────────────────────────
+let allEntries = [];   // كل الـ entries من الـ Worker
+let printCounts = {};  // { orderNumber: count }
+
+async function loadLogs() {
+  if (!isConfigured()) { openSettings(); return; }
+
+  show("loadingState");
+
+  try {
+    const { workerUrl, secret } = getConfig();
+    const resp = await fetch(`${workerUrl}/logs`, {
+      method: "POST",
+      headers: {
+        "Content-Type":  "application/json",
+        "Authorization": `Bearer ${secret}`,
+      },
+      body: JSON.stringify({}),
+    });
+    const data = await resp.json();
+    if (!resp.ok) throw new Error(data.error || `HTTP ${resp.status}`);
+
+    allEntries = data.entries || [];
+    buildPrintCounts();
+    renderKPIs();
+    applyFilters();
+
+    document.getElementById("lastUpdated").textContent =
+      "آخر تحديث: " + formatDateTime(new Date().toISOString());
+    document.getElementById("totalBadge").textContent =
+      allEntries.length.toLocaleString("en-US") + " عملية";
+
+    show("dashboard");
+  } catch (err) {
+    document.getElementById("errorMsg").textContent = err.message;
+    show("errorState");
+  }
+}
+
+function buildPrintCounts() {
+  printCounts = {};
+  for (const e of allEntries) {
+    printCounts[e.orderNumber] = (printCounts[e.orderNumber] || 0) + 1;
+  }
+}
+
+// ── KPIs ──────────────────────────────────────────────────────────────────────
+function renderKPIs() {
+  const todayStr = new Date().toISOString().slice(0, 10);
+  const todayEntries = allEntries.filter(e => e.timestamp.startsWith(todayStr));
+
+  const dupOrders = Object.values(printCounts).filter(c => c > 1).length;
+  const uniqOrders = Object.keys(printCounts).length;
+
+  setText("kpiTotal", allEntries.length.toLocaleString("en-US"));
+  setText("kpiToday", todayEntries.length.toLocaleString("en-US"));
+  setText("kpiS1",    allEntries.filter(e => e.type === "S1").length.toLocaleString("en-US"));
+  setText("kpiS2",    allEntries.filter(e => e.type === "S2").length.toLocaleString("en-US"));
+  setText("kpiDup",   dupOrders.toLocaleString("en-US"));
+  setText("kpiUniq",  uniqOrders.toLocaleString("en-US"));
+}
+
+// ── Filters ───────────────────────────────────────────────────────────────────
+function applyFilters() {
+  const orderQ = document.getElementById("filterOrder").value.trim().replace("#", "");
+  const typeQ  = document.getElementById("filterType").value;
+  const fromQ  = document.getElementById("filterFrom").value;
+  const toQ    = document.getElementById("filterTo").value;
+
+  let filtered = allEntries;
+
+  if (orderQ) {
+    filtered = filtered.filter(e => e.orderNumber.includes(orderQ));
+  }
+  if (typeQ !== "all") {
+    filtered = filtered.filter(e => e.type === typeQ);
+  }
+  if (fromQ) {
+    const from = new Date(fromQ).getTime();
+    filtered = filtered.filter(e => new Date(e.timestamp).getTime() >= from);
+  }
+  if (toQ) {
+    const to = new Date(toQ + "T23:59:59").getTime();
+    filtered = filtered.filter(e => new Date(e.timestamp).getTime() <= to);
+  }
+
+  renderTable(filtered);
+  document.getElementById("resultCount").textContent =
+    filtered.length.toLocaleString("en-US") + " نتيجة";
+}
+
+function clearFilters() {
+  document.getElementById("filterOrder").value = "";
+  document.getElementById("filterType").value  = "all";
+  document.getElementById("filterFrom").value  = "";
+  document.getElementById("filterTo").value    = "";
+  applyFilters();
+}
+
+// ── Table ─────────────────────────────────────────────────────────────────────
+function renderTable(entries) {
+  const tbody = document.getElementById("tableBody");
+  const empty = document.getElementById("tableEmpty");
+  const footer = document.getElementById("tableFooter");
+
+  if (entries.length === 0) {
+    tbody.innerHTML = "";
+    empty.style.display = "block";
+    footer.textContent = "";
+    return;
+  }
+  empty.style.display = "none";
+
+  const rows = entries.map(e => {
+    const count = printCounts[e.orderNumber] || 1;
+    const isDup = count > 1;
+
+    const countClass = count >= 3 ? "count-3" : count === 2 ? "count-2" : "count-1";
+    const typeClass  = e.type === "S2" ? "type-s2" : "type-s1";
+    const typeLabel  = e.type === "S2" ? "S2 — استبدال" : "S1 — عادي";
+
+    const dupBadge = isDup
+      ? `<span class="dup-badge">🔴 مكرر</span>`
+      : "";
+
+    return `
+      <tr>
+        <td>
+          ${dupBadge}
+          <span class="mono">#${e.orderNumber}</span>
+        </td>
+        <td><span class="type-badge ${typeClass}">${typeLabel}</span></td>
+        <td><span style="font-size:13px;">${formatDateTime(e.timestamp)}</span></td>
+        <td style="text-align:center;">
+          <span class="count-badge ${countClass}">${count}</span>
+        </td>
+        <td style="font-size:12px; color:var(--text-muted);">
+          ${isDup ? `طُبع ${count} مرات` : "—"}
+        </td>
+      </tr>
+    `;
+  }).join("");
+
+  tbody.innerHTML = rows;
+  footer.textContent = `عرض ${entries.length.toLocaleString("en-US")} من إجمالي ${allEntries.length.toLocaleString("en-US")} عملية`;
+}
+
+// ── Export XLSX ───────────────────────────────────────────────────────────────
+async function exportXLSX() {
+  if (!allEntries.length) { alert("لا توجد بيانات للتصدير"); return; }
+
+  const orderQ = document.getElementById("filterOrder").value.trim().replace("#", "");
+  const typeQ  = document.getElementById("filterType").value;
+  const fromQ  = document.getElementById("filterFrom").value;
+  const toQ    = document.getElementById("filterTo").value;
+
+  let filtered = allEntries;
+  if (orderQ) filtered = filtered.filter(e => e.orderNumber.includes(orderQ));
+  if (typeQ !== "all") filtered = filtered.filter(e => e.type === typeQ);
+  if (fromQ) filtered = filtered.filter(e => new Date(e.timestamp).getTime() >= new Date(fromQ).getTime());
+  if (toQ)   filtered = filtered.filter(e => new Date(e.timestamp).getTime() <= new Date(toQ + "T23:59:59").getTime());
+
+  const wb = new ExcelJS.Workbook();
+  wb.views = [{ rightToLeft: true }];
+  const ws = wb.addWorksheet("سجل الطباعة");
+  ws.views = [{ state: "frozen", ySplit: 1, rightToLeft: true }];
+
+  ws.columns = [
+    { header: "رقم الأوردر",        key: "orderNumber", width: 16 },
+    { header: "نوع الفاتورة",        key: "type",        width: 16 },
+    { header: "التاريخ والوقت",      key: "datetime",    width: 28 },
+    { header: "عدد مرات الطباعة",   key: "count",       width: 20 },
+    { header: "مكرر؟",              key: "isDup",       width: 12 },
+  ];
+
+  for (const e of filtered) {
+    const count = printCounts[e.orderNumber] || 1;
+    ws.addRow({
+      orderNumber: `#${e.orderNumber}`,
+      type:        e.type,
+      datetime:    formatDateTime(e.timestamp),
+      count:       count,
+      isDup:       count > 1 ? "نعم" : "لا",
+    });
+  }
+
+  ws.eachRow((row, idx) => {
+    if (idx === 1) return;
+    row.eachCell(cell => {
+      if (typeof cell.value === "number") cell.numFmt = "#,##0";
+    });
+  });
+
+  const today = new Date().toISOString().slice(0, 10);
+  const buffer = await wb.xlsx.writeBuffer();
+  const blob   = new Blob([buffer], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
+  const url    = URL.createObjectURL(blob);
+  const a      = document.createElement("a");
+  a.href = url; a.download = `print-log-${today}.xlsx`;
+  a.click(); URL.revokeObjectURL(url);
+}
+
+// ── Helpers ───────────────────────────────────────────────────────────────────
+function show(id) {
+  ["loadingState", "errorState", "dashboard"].forEach(s => {
+    document.getElementById(s).style.display = s === id ? (id === "dashboard" ? "block" : "flex") : "none";
+  });
+}
+function setText(id, val) { document.getElementById(id).textContent = val; }
+
+function formatDateTime(iso) {
+  const d = new Date(iso);
+  const pad = n => String(n).padStart(2, "0");
+  let h = d.getHours();
+  const m    = pad(d.getMinutes());
+  const ampm = h >= 12 ? "مساءً" : "صباحاً";
+  h = h % 12 || 12;
+  return `${pad(d.getDate())}-${pad(d.getMonth()+1)}-${d.getFullYear()} ${pad(h)}:${m} ${ampm}`;
+}
+
+// ── Init ──────────────────────────────────────────────────────────────────────
+window.addEventListener("load", () => {
+  if (!isConfigured()) { openSettings(); return; }
+  loadLogs();
+});
+</script>
+</body>
+</html>
