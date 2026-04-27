@@ -471,7 +471,7 @@ async function loadOrders(forceRefresh = false) {
       allOrders.length.toLocaleString("en-US") + " أوردر";
     document.getElementById("lastUpdated").textContent =
       "آخر تحديث: " + formatDateTime(data.cachedAt || new Date().toISOString()) +
-      (data.source === "kv" ? " (كاش)" : "");
+      (data.source === "kv" ? "" : "");
 
     show("dashboard");
   } catch (err) {
@@ -610,15 +610,13 @@ async function startPrint() {
   showPrintLoading("جاري جلب بيانات الفواتير...");
 
   try {
-    // جيب بيانات كل أوردر
-    const invoices = [];
-    let i = 0;
-    for (const order of selectedOrders) {
-      i++;
-      showPrintLoading(`جاري تحضير الفاتورة ${i} من ${selectedOrders.length}...`);
-      const data = await apiPost("/invoice", { orderId: order.id });
-      invoices.push(data.invoice);
-    }
+    // جيب بيانات كل الفواتير مع بعض (parallel)
+    showPrintLoading(`جاري تحضير ${selectedOrders.length} فاتورة...`);
+    const invoices = await Promise.all(
+      selectedOrders.map(order =>
+        apiPost("/invoice", { orderId: order.id }).then(d => d.invoice)
+      )
+    );
 
     showPrintLoading("جاري رسم الفواتير...");
 
