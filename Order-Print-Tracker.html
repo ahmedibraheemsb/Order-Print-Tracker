@@ -177,7 +177,7 @@ tr.selected td { background: var(--accent-light); }
   min-width: 26px; height: 26px; border-radius: 13px; padding: 0 6px;
   font-size: 12px; font-weight: 700; font-family: 'IBM Plex Mono', monospace;
 }
-.count-0 { background: var(--surface-2);   color: var(--text-muted); }
+.count-0 { background: var(--green-light); color: var(--green); }
 .count-1 { background: var(--green-light); color: var(--green); }
 .count-2 { background: var(--amber-light); color: var(--amber); }
 .count-3 { background: var(--red-light);   color: var(--red); }
@@ -313,11 +313,12 @@ input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; accent-colo
       </div>
 
       <!-- Print Bar -->
-      <div class="print-bar" id="printBar" style="display:none;">
-        <span class="print-bar-info" id="selectedInfo">—</span>
+      <div class="print-bar" id="printBar" style="display:flex;">
+        <span class="print-bar-info" id="selectedInfo">لم يتم تحديد أي أوردر</span>
         <div style="flex:1;"></div>
-        <button class="btn btn-primary" onclick="startPrint()">🖨️ طباعة المحدد</button>
-        <button class="btn btn-ghost btn-sm" onclick="clearSelection()">إلغاء التحديد</button>
+        <button class="btn btn-ghost btn-sm" id="clearSelBtn" onclick="clearSelection()" style="display:none;">إلغاء التحديد</button>
+        <button class="btn btn-ghost" onclick="printAll()">🖨️ طباعة الكل</button>
+        <button class="btn btn-primary" id="printSelectedBtn" onclick="startPrint()" style="display:none;">🖨️ طباعة المحدد</button>
       </div>
 
       <!-- Filters -->
@@ -524,7 +525,7 @@ input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; accent-colo
     <p class="confirm-question">هل أنت متأكد من أنك تريد طباعتها مرة أخرى؟</p>
     <div class="modal-actions" style="margin-top:20px;">
       <button class="btn btn-ghost" onclick="closeConfirm()">إلغاء</button>
-      <button class="btn btn-danger" id="confirmPrintBtn">🖨️ نعم، اطبع على أي حال</button>
+      <button class="btn btn-danger" id="confirmPrintBtn">🖨️ أطبع</button>
     </div>
   </div>
 </div>
@@ -698,7 +699,7 @@ function renderPrintTable() {
     const typeLabel  = o.type === "S2" ? "استبدال/استرجاع" : "أوردر عادي";
     const typeClass  = o.type === "S2" ? "type-s2" : "type-s1";
     const countClass = count === 0 ? "count-0" : count === 1 ? "count-1" : count === 2 ? "count-2" : "count-3";
-    const countLabel = count === 0 ? "لم يُطبع" : count;
+    const countLabel = count;
 
     return `<tr class="${rowClass}" onclick="toggleRow('${o.id}', event)">
       <td class="center" onclick="event.stopPropagation()">
@@ -733,14 +734,29 @@ function clearSelection() {
 }
 function updatePrintBar() {
   const count = selectedIds.size;
-  document.getElementById("printBar").style.display = count > 0 ? "flex" : "none";
   const s1c = [...selectedIds].filter(id => allOrders.find(o=>o.id===id)?.type==="S1").length;
   const s2c = [...selectedIds].filter(id => allOrders.find(o=>o.id===id)?.type==="S2").length;
-  let info = `${count} أوردر محدد`;
-  if (s1c && s2c)   info += ` (${s1c} عادي + ${s2c} استبدال)`;
-  else if (s1c)     info += ` (${s1c} عادي)`;
-  else if (s2c)     info += ` (${s2c} استبدال)`;
+
+  // Always visible — update info text
+  let info = count === 0 ? "لم يتم تحديد أي أوردر" : `${count} أوردر محدد`;
+  if (count > 0) {
+    if (s1c && s2c)   info += ` (${s1c} عادي + ${s2c} استبدال)`;
+    else if (s1c)     info += ` (${s1c} عادي)`;
+    else if (s2c)     info += ` (${s2c} استبدال)`;
+  }
   document.getElementById("selectedInfo").textContent = info;
+
+  // Show/hide selection-dependent buttons
+  const hasSelection = count > 0;
+  document.getElementById("printSelectedBtn").style.display = hasSelection ? "inline-flex" : "none";
+  document.getElementById("clearSelBtn").style.display     = hasSelection ? "inline-flex" : "none";
+}
+
+function printAll() {
+  // Select all filtered orders and print
+  filteredOrders.forEach(o => selectedIds.add(o.id));
+  applyPrintFilters();
+  startPrint();
 }
 
 // ── Print Flow ──
@@ -789,8 +805,9 @@ function showConfirmReprint(alreadyPrinted, allSelected) {
   const newBtn = btn.cloneNode(true);
   btn.parentNode.replaceChild(newBtn, btn);
   newBtn.addEventListener("click", () => {
+    const ordersToprint = pendingPrintOrders; // capture before closeConfirm nulls it
     closeConfirm();
-    executePrint(pendingPrintOrders);
+    executePrint(ordersToprint);
   });
 
   document.getElementById("confirmOverlay").classList.add("open");
