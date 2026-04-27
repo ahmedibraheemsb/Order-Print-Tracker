@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>طباعة الفواتير — EcomModa</title>
+<title>Order Printer & Tracker — EcomModa</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Arabic:wght@300;400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.3.0/exceljs.min.js"></script>
@@ -46,17 +46,13 @@ body {
   padding: 0 20px; box-shadow: var(--shadow);
   display: flex; align-items: stretch; justify-content: space-between;
 }
-.header-brand {
-  display: flex; align-items: center; gap: 10px; padding: 12px 0;
-}
+.header-brand { display: flex; align-items: center; gap: 10px; padding: 12px 0; }
 .header-brand h1 { font-size: 17px; font-weight: 700; }
+.header-subtitle { font-size: 11px; color: var(--text-muted); font-family: 'IBM Plex Mono', monospace; }
 .header-actions { display: flex; gap: 8px; align-items: center; }
 
 /* ── Tabs ── */
-.tabs {
-  display: flex; gap: 0; align-items: stretch;
-  border-bottom: none; margin-right: 20px;
-}
+.tabs { display: flex; align-items: stretch; margin-right: 24px; }
 .tab-btn {
   padding: 14px 20px; font-family: inherit; font-size: 13px; font-weight: 600;
   cursor: pointer; border: none; background: transparent;
@@ -78,6 +74,8 @@ body {
 .btn-primary:disabled { background: #93c5fd; cursor: not-allowed; }
 .btn-ghost { background: transparent; color: var(--text-secondary); border: 1px solid var(--border-strong); }
 .btn-ghost:hover { background: var(--surface-2); }
+.btn-danger { background: var(--red); color: #fff; }
+.btn-danger:hover { background: #b91c1c; }
 .btn-sm { padding: 6px 12px; font-size: 12px; }
 
 /* ── Main ── */
@@ -106,6 +104,7 @@ body {
   display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px;
   margin-bottom: 20px;
 }
+.kpi-grid-3 { grid-template-columns: repeat(3, 1fr); }
 .kpi-card {
   background: var(--surface); border-radius: var(--radius);
   padding: 16px 20px; box-shadow: var(--shadow); border: 1px solid var(--border);
@@ -173,28 +172,12 @@ tr.selected td { background: var(--accent-light); }
 }
 .type-s1 { background: var(--accent-light); color: var(--accent); }
 .type-s2 { background: var(--amber-light);  color: var(--amber); }
-.printed-badge {
-  display: inline-flex; align-items: center; gap: 3px;
-  padding: 2px 8px; border-radius: 20px;
-  background: var(--green-light); color: var(--green);
-  font-size: 11px; font-weight: 600;
-}
-.unprinted-badge {
-  display: inline-flex; align-items: center;
-  padding: 2px 8px; border-radius: 20px;
-  background: var(--surface-2); color: var(--text-muted); font-size: 11px;
-}
-.dup-badge {
-  display: inline-flex; align-items: center; gap: 3px;
-  padding: 2px 8px; border-radius: 20px;
-  background: var(--red-light); color: var(--red);
-  font-size: 11px; font-weight: 700;
-}
 .count-badge {
   display: inline-flex; align-items: center; justify-content: center;
-  width: 22px; height: 22px; border-radius: 50%;
-  font-size: 11px; font-weight: 700; font-family: 'IBM Plex Mono', monospace;
+  min-width: 26px; height: 26px; border-radius: 13px; padding: 0 6px;
+  font-size: 12px; font-weight: 700; font-family: 'IBM Plex Mono', monospace;
 }
+.count-0 { background: var(--surface-2);   color: var(--text-muted); }
 .count-1 { background: var(--green-light); color: var(--green); }
 .count-2 { background: var(--amber-light); color: var(--amber); }
 .count-3 { background: var(--red-light);   color: var(--red); }
@@ -225,6 +208,26 @@ tr.selected td { background: var(--accent-light); }
 }
 .form-input:focus { border-color: var(--accent); }
 .modal-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px; }
+
+/* ── Confirm Modal ── */
+.confirm-modal { width: 480px; }
+.confirm-warning-box {
+  background: var(--red-light); border: 1px solid var(--red-border);
+  border-radius: var(--radius-sm); padding: 16px; margin-bottom: 16px;
+}
+.confirm-warning-title {
+  font-size: 15px; font-weight: 700; color: var(--red); margin-bottom: 8px;
+  display: flex; align-items: center; gap: 8px;
+}
+.confirm-orders-list { display: flex; flex-direction: column; gap: 6px; margin-top: 8px; }
+.confirm-order-item {
+  background: var(--surface); border: 1px solid var(--red-border);
+  border-radius: var(--radius-sm); padding: 10px 12px;
+  font-size: 13px; display: flex; align-items: center; justify-content: space-between;
+}
+.confirm-order-num { font-family: 'IBM Plex Mono', monospace; font-weight: 700; }
+.confirm-order-meta { color: var(--text-secondary); font-size: 12px; }
+.confirm-question { font-size: 14px; font-weight: 600; color: var(--text-primary); margin-top: 12px; }
 
 /* ── Print Loading ── */
 .print-loading-overlay {
@@ -262,7 +265,10 @@ input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; accent-colo
   <div style="display:flex; align-items:center; gap:0;">
     <div class="header-brand">
       <span>🖨️</span>
-      <h1>طباعة الفواتير</h1>
+      <div>
+        <h1>طباعة أوردرات القاهرة</h1>
+        <div class="header-subtitle">Order Printer &amp; Tracker</div>
+      </div>
     </div>
     <div class="tabs" style="margin-right:24px;">
       <button class="tab-btn active" onclick="switchTab('print', this)">🖨️ الطباعة</button>
@@ -271,7 +277,7 @@ input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; accent-colo
   </div>
   <div class="header-actions">
     <span id="lastUpdated" style="font-size:12px; color:var(--text-muted);"></span>
-    <button class="btn btn-ghost btn-sm" id="refreshBtn" onclick="handleRefresh()">🔄 تحديث</button>
+    <button class="btn btn-ghost btn-sm" onclick="handleRefresh()">🔄 تحديث</button>
     <button class="btn btn-ghost btn-sm" onclick="openSettings()">⚙️ إعدادات</button>
   </div>
 </header>
@@ -279,7 +285,7 @@ input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; accent-colo
 <!-- ── Main ── -->
 <main class="main">
 
-  <!-- ══════════════════════════════ TAB: PRINT ══════════════════════════════ -->
+  <!-- ══ TAB: PRINT ══ -->
   <div class="tab-panel active" id="tab-print">
 
     <div id="printLoadingState" class="state-box" style="display:none;">
@@ -294,12 +300,8 @@ input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; accent-colo
 
     <div id="printDashboard" style="display:none;">
 
-      <!-- KPIs -->
-      <div class="kpi-grid">
-        <div class="kpi-card accent">
-          <div class="kpi-value" id="kpiAll">0</div>
-          <div class="kpi-label">إجمالي جاهز للطباعة</div>
-        </div>
+      <!-- KPIs — 2 cards only -->
+      <div class="kpi-grid" style="grid-template-columns:repeat(2,1fr); margin-bottom:20px;">
         <div class="kpi-card">
           <div class="kpi-value" id="kpiS1">0</div>
           <div class="kpi-label">أوردر عادي (S1)</div>
@@ -307,10 +309,6 @@ input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; accent-colo
         <div class="kpi-card amber">
           <div class="kpi-value" id="kpiS2">0</div>
           <div class="kpi-label">استبدال/استرجاع (S2)</div>
-        </div>
-        <div class="kpi-card green">
-          <div class="kpi-value" id="kpiUnprinted">0</div>
-          <div class="kpi-label">لم يُطبع بعد</div>
         </div>
       </div>
 
@@ -337,11 +335,12 @@ input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; accent-colo
           </select>
         </div>
         <div class="filter-group">
-          <span class="filter-label">الطباعة</span>
-          <select id="filterPrinted" onchange="applyPrintFilters()">
+          <span class="filter-label">مرات الطباعة</span>
+          <select id="filterPrintCount" onchange="applyPrintFilters()">
             <option value="all">الكل</option>
-            <option value="unprinted">لم يُطبع</option>
-            <option value="printed">مطبوع</option>
+            <option value="0">لم يُطبع</option>
+            <option value="1">مرة واحدة</option>
+            <option value="2+">أكثر من مرة</option>
           </select>
         </div>
         <button class="btn btn-ghost btn-sm" onclick="clearPrintFilters()">مسح</button>
@@ -363,7 +362,7 @@ input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; accent-colo
                 <th>التاريخ</th>
                 <th>النوع</th>
                 <th>الحالة</th>
-                <th class="center">الطباعة</th>
+                <th class="center">مرات الطباعة</th>
               </tr>
             </thead>
             <tbody id="printTableBody"></tbody>
@@ -372,11 +371,10 @@ input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; accent-colo
         </div>
         <div class="table-footer" id="printTableFooter"></div>
       </div>
-
     </div>
   </div>
 
-  <!-- ══════════════════════════════ TAB: LOGS ══════════════════════════════ -->
+  <!-- ══ TAB: LOGS ══ -->
   <div class="tab-panel" id="tab-logs">
 
     <div id="logsLoadingState" class="state-box" style="display:none;">
@@ -392,7 +390,7 @@ input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; accent-colo
     <div id="logsDashboard" style="display:none;">
 
       <!-- KPIs -->
-      <div class="kpi-grid">
+      <div class="kpi-grid" style="margin-bottom:20px;">
         <div class="kpi-card accent">
           <div class="kpi-value" id="logKpiTotal">0</div>
           <div class="kpi-label">إجمالي عمليات الطباعة</div>
@@ -434,6 +432,14 @@ input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; accent-colo
           </select>
         </div>
         <div class="filter-group">
+          <span class="filter-label">مرات الطباعة</span>
+          <select id="logFilterCount" onchange="applyLogFilters()">
+            <option value="all">الكل</option>
+            <option value="1">مرة واحدة</option>
+            <option value="2+">أكثر من مرة</option>
+          </select>
+        </div>
+        <div class="filter-group">
           <span class="filter-label">من</span>
           <input type="date" id="logFilterFrom" onchange="applyLogFilters()">
         </div>
@@ -457,7 +463,6 @@ input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; accent-colo
                 <th>نوع الفاتورة</th>
                 <th>التاريخ والوقت</th>
                 <th class="center">عدد مرات الطباعة</th>
-                <th>ملاحظة</th>
               </tr>
             </thead>
             <tbody id="logsTableBody"></tbody>
@@ -466,7 +471,6 @@ input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; accent-colo
         </div>
         <div class="table-footer" id="logsTableFooter"></div>
       </div>
-
     </div>
   </div>
 
@@ -503,12 +507,33 @@ input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; accent-colo
   </div>
 </div>
 
+<!-- ── Confirm Reprint Modal ── -->
+<div class="overlay" id="confirmOverlay">
+  <div class="modal confirm-modal">
+    <div class="modal-header">
+      <span class="modal-title">⚠️ تحذير — طباعة مكررة</span>
+      <button class="modal-close" onclick="closeConfirm()">✕</button>
+    </div>
+    <div class="confirm-warning-box">
+      <div class="confirm-warning-title">
+        <span>🔴</span>
+        <span id="confirmWarningTitle">الأوردرات التالية سبق طباعتها:</span>
+      </div>
+      <div class="confirm-orders-list" id="confirmOrdersList"></div>
+    </div>
+    <p class="confirm-question">هل أنت متأكد من أنك تريد طباعتها مرة أخرى؟</p>
+    <div class="modal-actions" style="margin-top:20px;">
+      <button class="btn btn-ghost" onclick="closeConfirm()">إلغاء</button>
+      <button class="btn btn-danger" id="confirmPrintBtn">🖨️ نعم، اطبع على أي حال</button>
+    </div>
+  </div>
+</div>
+
 <script>
 // ══════════════════════════════════════════════════════════════════════════════
 // Config
 // ══════════════════════════════════════════════════════════════════════════════
 const CFG_KEY = "invoice_printer_v2_config";
-
 function getConfig() { try { return JSON.parse(localStorage.getItem(CFG_KEY)) || {}; } catch { return {}; } }
 function saveConfig(c) { localStorage.setItem(CFG_KEY, JSON.stringify(c)); }
 function isConfigured() { const c = getConfig(); return c.workerUrl?.startsWith("http") && c.secret?.length > 0; }
@@ -532,8 +557,10 @@ function saveSettings() {
 // ══════════════════════════════════════════════════════════════════════════════
 // Tabs
 // ══════════════════════════════════════════════════════════════════════════════
-let currentTab = "print";
-let logsLoaded = false;
+let currentTab   = "print";
+let logsLoaded   = false;
+let printLastUpdated = "";
+let logsLastUpdated  = "";
 
 function switchTab(tab, btn) {
   currentTab = tab;
@@ -541,14 +568,10 @@ function switchTab(tab, btn) {
   document.querySelectorAll(".tab-panel").forEach(p => p.classList.remove("active"));
   btn.classList.add("active");
   document.getElementById(`tab-${tab}`).classList.add("active");
-
-  if (tab === "logs" && !logsLoaded) loadLogs();
-
-  // Update refresh button behavior
   document.getElementById("lastUpdated").textContent =
-    tab === "print" ? (printLastUpdated || "") : (logsLastUpdated || "");
+    tab === "print" ? printLastUpdated : logsLastUpdated;
+  if (tab === "logs" && !logsLoaded) loadLogs();
 }
-
 function handleRefresh() {
   if (currentTab === "print") loadOrders(true);
   else loadLogs();
@@ -572,10 +595,12 @@ async function apiPost(path, body = {}) {
 // ══════════════════════════════════════════════════════════════════════════════
 // PRINT TAB
 // ══════════════════════════════════════════════════════════════════════════════
-let allOrders   = [];
+let allOrders      = [];
 let filteredOrders = [];
-let selectedIds = new Set();
-let printLastUpdated = "";
+let selectedIds    = new Set();
+
+// printCountsMap: orderNumber -> count (from logs)
+let printCountsMap = {};
 
 function showPrint(id) {
   ["printLoadingState","printErrorState","printDashboard"].forEach(s => {
@@ -588,12 +613,29 @@ async function loadOrders(forceRefresh = false) {
   if (!isConfigured()) { openSettings(); return; }
   showPrint("printLoadingState");
   try {
-    const data = await apiPost("/orders", { forceRefresh });
-    allOrders = data.orders || [];
+    // Load orders and logs in parallel for print counts
+    const [ordersData, logsData] = await Promise.all([
+      apiPost("/orders", { forceRefresh }),
+      apiPost("/logs", {}),
+    ]);
+
+    allOrders = ordersData.orders || [];
     selectedIds.clear();
+
+    // Build print counts from logs
+    const logEntries = logsData.entries || [];
+    printCountsMap = {};
+    for (const e of logEntries) {
+      printCountsMap[e.orderNumber] = (printCountsMap[e.orderNumber] || 0) + 1;
+    }
+    // Also sync logs state
+    allLogs = logEntries;
+    logsLoaded = true;
+    buildLogPrintCounts();
+
     updatePrintKPIs();
     applyPrintFilters();
-    printLastUpdated = "آخر تحديث: " + formatDateTime(data.cachedAt || new Date().toISOString());
+    printLastUpdated = "آخر تحديث: " + formatDateTime(ordersData.cachedAt || new Date().toISOString());
     document.getElementById("lastUpdated").textContent = printLastUpdated;
     showPrint("printDashboard");
   } catch (err) {
@@ -602,26 +644,27 @@ async function loadOrders(forceRefresh = false) {
   }
 }
 
+function getPrintCount(order) {
+  const num = order.name.replace("#","");
+  return printCountsMap[num] || 0;
+}
+
 function updatePrintKPIs() {
-  const s1  = allOrders.filter(o => o.type === "S1").length;
-  const s2  = allOrders.filter(o => o.type === "S2").length;
-  const unp = allOrders.filter(o => !o.isPrinted).length;
-  document.getElementById("kpiAll").textContent       = allOrders.length.toLocaleString("en-US");
-  document.getElementById("kpiS1").textContent        = s1.toLocaleString("en-US");
-  document.getElementById("kpiS2").textContent        = s2.toLocaleString("en-US");
-  document.getElementById("kpiUnprinted").textContent = unp.toLocaleString("en-US");
+  document.getElementById("kpiS1").textContent = allOrders.filter(o=>o.type==="S1").length.toLocaleString("en-US");
+  document.getElementById("kpiS2").textContent = allOrders.filter(o=>o.type==="S2").length.toLocaleString("en-US");
 }
 
 function applyPrintFilters() {
-  const orderQ   = document.getElementById("filterOrder").value.trim().replace("#", "");
-  const typeQ    = document.getElementById("filterType").value;
-  const printedQ = document.getElementById("filterPrinted").value;
+  const orderQ = document.getElementById("filterOrder").value.trim().replace("#","");
+  const typeQ  = document.getElementById("filterType").value;
+  const countQ = document.getElementById("filterPrintCount").value;
 
   filteredOrders = allOrders;
-  if (orderQ)                   filteredOrders = filteredOrders.filter(o => o.name.replace("#","").includes(orderQ));
-  if (typeQ !== "all")          filteredOrders = filteredOrders.filter(o => o.type === typeQ);
-  if (printedQ === "unprinted") filteredOrders = filteredOrders.filter(o => !o.isPrinted);
-  if (printedQ === "printed")   filteredOrders = filteredOrders.filter(o =>  o.isPrinted);
+  if (orderQ)           filteredOrders = filteredOrders.filter(o => o.name.replace("#","").includes(orderQ));
+  if (typeQ !== "all")  filteredOrders = filteredOrders.filter(o => o.type === typeQ);
+  if (countQ === "0")   filteredOrders = filteredOrders.filter(o => getPrintCount(o) === 0);
+  if (countQ === "1")   filteredOrders = filteredOrders.filter(o => getPrintCount(o) === 1);
+  if (countQ === "2+")  filteredOrders = filteredOrders.filter(o => getPrintCount(o) >= 2);
 
   document.getElementById("printResultCount").textContent = filteredOrders.length.toLocaleString("en-US") + " نتيجة";
   renderPrintTable();
@@ -629,15 +672,15 @@ function applyPrintFilters() {
 }
 
 function clearPrintFilters() {
-  document.getElementById("filterOrder").value   = "";
-  document.getElementById("filterType").value    = "all";
-  document.getElementById("filterPrinted").value = "all";
+  document.getElementById("filterOrder").value      = "";
+  document.getElementById("filterType").value       = "all";
+  document.getElementById("filterPrintCount").value = "all";
   applyPrintFilters();
 }
 
 function renderPrintTable() {
-  const tbody = document.getElementById("printTableBody");
-  const empty = document.getElementById("printTableEmpty");
+  const tbody  = document.getElementById("printTableBody");
+  const empty  = document.getElementById("printTableEmpty");
   const footer = document.getElementById("printTableFooter");
 
   if (!filteredOrders.length) {
@@ -649,13 +692,13 @@ function renderPrintTable() {
   empty.style.display = "none";
 
   tbody.innerHTML = filteredOrders.map(o => {
+    const count      = getPrintCount(o);
     const checked    = selectedIds.has(o.id) ? "checked" : "";
     const rowClass   = selectedIds.has(o.id) ? "selected" : "";
     const typeLabel  = o.type === "S2" ? "استبدال/استرجاع" : "أوردر عادي";
     const typeClass  = o.type === "S2" ? "type-s2" : "type-s1";
-    const printBadge = o.isPrinted
-      ? `<span class="printed-badge">✓ مطبوع</span>`
-      : `<span class="unprinted-badge">لم يُطبع</span>`;
+    const countClass = count === 0 ? "count-0" : count === 1 ? "count-1" : count === 2 ? "count-2" : "count-3";
+    const countLabel = count === 0 ? "لم يُطبع" : count;
 
     return `<tr class="${rowClass}" onclick="toggleRow('${o.id}', event)">
       <td class="center" onclick="event.stopPropagation()">
@@ -666,7 +709,7 @@ function renderPrintTable() {
       <td style="font-size:12px;">${formatDate(o.createdAt)}</td>
       <td><span class="type-badge ${typeClass}">${typeLabel}</span></td>
       <td style="font-size:12px;">${escHtml(o.status)}</td>
-      <td class="center">${printBadge}</td>
+      <td class="center"><span class="count-badge ${countClass}">${countLabel}</span></td>
     </tr>`;
   }).join("");
 
@@ -694,22 +737,76 @@ function updatePrintBar() {
   const s1c = [...selectedIds].filter(id => allOrders.find(o=>o.id===id)?.type==="S1").length;
   const s2c = [...selectedIds].filter(id => allOrders.find(o=>o.id===id)?.type==="S2").length;
   let info = `${count} أوردر محدد`;
-  if (s1c && s2c) info += ` (${s1c} عادي + ${s2c} استبدال)`;
-  else if (s1c)   info += ` (${s1c} عادي)`;
-  else if (s2c)   info += ` (${s2c} استبدال)`;
+  if (s1c && s2c)   info += ` (${s1c} عادي + ${s2c} استبدال)`;
+  else if (s1c)     info += ` (${s1c} عادي)`;
+  else if (s2c)     info += ` (${s2c} استبدال)`;
   document.getElementById("selectedInfo").textContent = info;
 }
 
 // ── Print Flow ──
+let pendingPrintOrders = null;
+
 async function startPrint() {
   if (!selectedIds.size) return;
   const selected = allOrders.filter(o => selectedIds.has(o.id));
 
-  showPrintLoading(`جاري تحضير ${selected.length} فاتورة...`);
+  // Check for previously printed orders
+  const alreadyPrinted = selected.filter(o => getPrintCount(o) > 0);
+
+  if (alreadyPrinted.length > 0) {
+    showConfirmReprint(alreadyPrinted, selected);
+    return;
+  }
+
+  await executePrint(selected);
+}
+
+function showConfirmReprint(alreadyPrinted, allSelected) {
+  pendingPrintOrders = allSelected;
+
+  const title = alreadyPrinted.length === 1
+    ? `الأوردر التالي سبق طباعته:`
+    : `الأوردرات التالية (${alreadyPrinted.length}) سبق طباعتها:`;
+  document.getElementById("confirmWarningTitle").textContent = title;
+
+  // Build order items list
+  const list = document.getElementById("confirmOrdersList");
+  list.innerHTML = alreadyPrinted.map(o => {
+    const count = getPrintCount(o);
+    // Find last print entry for this order
+    const num   = o.name.replace("#","");
+    const lastEntry = allLogs.filter(e => e.orderNumber === num)
+      .sort((a,b) => new Date(b.timestamp) - new Date(a.timestamp))[0];
+    const lastTime  = lastEntry ? formatDateTime(lastEntry.timestamp) : "—";
+    return `<div class="confirm-order-item">
+      <span class="confirm-order-num">${o.name}</span>
+      <span class="confirm-order-meta">طُبع ${count} ${count === 1 ? "مرة" : "مرات"} — آخرها: ${lastTime}</span>
+    </div>`;
+  }).join("");
+
+  // Set confirm button action
+  const btn = document.getElementById("confirmPrintBtn");
+  const newBtn = btn.cloneNode(true);
+  btn.parentNode.replaceChild(newBtn, btn);
+  newBtn.addEventListener("click", () => {
+    closeConfirm();
+    executePrint(pendingPrintOrders);
+  });
+
+  document.getElementById("confirmOverlay").classList.add("open");
+}
+
+function closeConfirm() {
+  document.getElementById("confirmOverlay").classList.remove("open");
+  pendingPrintOrders = null;
+}
+
+async function executePrint(selectedOrders) {
+  showPrintLoading(`جاري تحضير ${selectedOrders.length} فاتورة...`);
 
   try {
     const invoices = await Promise.all(
-      selected.map(o => apiPost("/invoice", { orderId: o.id }).then(d => d.invoice))
+      selectedOrders.map(o => apiPost("/invoice", { orderId: o.id }).then(d => d.invoice))
     );
 
     showPrintLoading("جاري رسم الفواتير...");
@@ -736,15 +833,16 @@ async function startPrint() {
     hidePrintLoading();
     window.print();
 
-    // Update UI
+    // Update print counts locally
     for (const inv of invoices) {
-      const o = allOrders.find(o => o.id === inv.id);
-      if (o) o.isPrinted = true;
+      const num = inv.name.replace("#","");
+      printCountsMap[num] = (printCountsMap[num] || 0) + 1;
     }
     clearSelection();
     updatePrintKPIs();
+    applyPrintFilters();
 
-    // Refresh logs if already loaded
+    // Refresh logs
     if (logsLoaded) loadLogs();
 
   } catch (err) {
@@ -765,9 +863,8 @@ function hidePrintLoading() {
 // LOGS TAB
 // ══════════════════════════════════════════════════════════════════════════════
 let allLogs      = [];
-let printCounts  = {};
+let logCounts    = {}; // orderNumber -> count (from allLogs)
 let filteredLogs = [];
-let logsLastUpdated = "";
 
 function showLogs(id) {
   ["logsLoadingState","logsErrorState","logsDashboard"].forEach(s => {
@@ -781,11 +878,14 @@ async function loadLogs() {
   showLogs("logsLoadingState");
   try {
     const data = await apiPost("/logs", {});
-    allLogs = data.entries || [];
+    allLogs    = data.entries || [];
     logsLoaded = true;
-    buildPrintCounts();
+    buildLogPrintCounts();
+    // Sync printCountsMap for print tab
+    printCountsMap = { ...logCounts };
     updateLogKPIs();
     applyLogFilters();
+    applyPrintFilters();
     logsLastUpdated = "آخر تحديث: " + formatDateTime(new Date().toISOString());
     if (currentTab === "logs") document.getElementById("lastUpdated").textContent = logsLastUpdated;
     showLogs("logsDashboard");
@@ -795,18 +895,18 @@ async function loadLogs() {
   }
 }
 
-function buildPrintCounts() {
-  printCounts = {};
+function buildLogPrintCounts() {
+  logCounts = {};
   for (const e of allLogs) {
-    printCounts[e.orderNumber] = (printCounts[e.orderNumber] || 0) + 1;
+    logCounts[e.orderNumber] = (logCounts[e.orderNumber] || 0) + 1;
   }
 }
 
 function updateLogKPIs() {
   const todayStr = new Date().toISOString().slice(0, 10);
   const today    = allLogs.filter(e => e.timestamp.startsWith(todayStr));
-  const dupOrders  = Object.values(printCounts).filter(c => c > 1).length;
-  const uniqOrders = Object.keys(printCounts).length;
+  const dupOrders  = Object.values(logCounts).filter(c => c > 1).length;
+  const uniqOrders = Object.keys(logCounts).length;
   document.getElementById("logKpiTotal").textContent = allLogs.length.toLocaleString("en-US");
   document.getElementById("logKpiToday").textContent = today.length.toLocaleString("en-US");
   document.getElementById("logKpiS1").textContent    = allLogs.filter(e=>e.type==="S1").length.toLocaleString("en-US");
@@ -818,12 +918,15 @@ function updateLogKPIs() {
 function applyLogFilters() {
   const orderQ = document.getElementById("logFilterOrder").value.trim().replace("#","");
   const typeQ  = document.getElementById("logFilterType").value;
+  const countQ = document.getElementById("logFilterCount").value;
   const fromQ  = document.getElementById("logFilterFrom").value;
   const toQ    = document.getElementById("logFilterTo").value;
 
   filteredLogs = allLogs;
-  if (orderQ)        filteredLogs = filteredLogs.filter(e => e.orderNumber.includes(orderQ));
-  if (typeQ !== "all") filteredLogs = filteredLogs.filter(e => e.type === typeQ);
+  if (orderQ)           filteredLogs = filteredLogs.filter(e => e.orderNumber.includes(orderQ));
+  if (typeQ !== "all")  filteredLogs = filteredLogs.filter(e => e.type === typeQ);
+  if (countQ === "1")   filteredLogs = filteredLogs.filter(e => (logCounts[e.orderNumber]||1) === 1);
+  if (countQ === "2+")  filteredLogs = filteredLogs.filter(e => (logCounts[e.orderNumber]||1) >= 2);
   if (fromQ) filteredLogs = filteredLogs.filter(e => new Date(e.timestamp).getTime() >= new Date(fromQ).getTime());
   if (toQ)   filteredLogs = filteredLogs.filter(e => new Date(e.timestamp).getTime() <= new Date(toQ+"T23:59:59").getTime());
 
@@ -834,6 +937,7 @@ function applyLogFilters() {
 function clearLogFilters() {
   document.getElementById("logFilterOrder").value = "";
   document.getElementById("logFilterType").value  = "all";
+  document.getElementById("logFilterCount").value = "all";
   document.getElementById("logFilterFrom").value  = "";
   document.getElementById("logFilterTo").value    = "";
   applyLogFilters();
@@ -853,18 +957,15 @@ function renderLogsTable() {
   empty.style.display = "none";
 
   tbody.innerHTML = filteredLogs.map(e => {
-    const count      = printCounts[e.orderNumber] || 1;
-    const isDup      = count > 1;
-    const countClass = count >= 3 ? "count-3" : count === 2 ? "count-2" : "count-1";
+    const count      = logCounts[e.orderNumber] || 1;
+    const countClass = count === 1 ? "count-1" : count === 2 ? "count-2" : "count-3";
     const typeLabel  = e.type === "S2" ? "استبدال/استرجاع" : "أوردر عادي";
     const typeClass  = e.type === "S2" ? "type-s2" : "type-s1";
-    const dupBadge   = isDup ? `<span class="dup-badge">🔴 مكرر</span> ` : "";
     return `<tr>
-      <td>${dupBadge}<span class="mono">#${e.orderNumber}</span></td>
+      <td><span class="mono">#${e.orderNumber}</span></td>
       <td><span class="type-badge ${typeClass}">${typeLabel}</span></td>
       <td style="font-size:13px;">${formatDateTime(e.timestamp)}</td>
       <td class="center"><span class="count-badge ${countClass}">${count}</span></td>
-      <td style="font-size:12px; color:var(--text-muted);">${isDup ? `طُبع ${count} مرات` : "—"}</td>
     </tr>`;
   }).join("");
 
@@ -878,20 +979,17 @@ async function exportLogsXLSX() {
   const ws = wb.addWorksheet("سجل الطباعة");
   ws.views = [{ state: "frozen", ySplit: 1, rightToLeft: true }];
   ws.columns = [
-    { header: "رقم الأوردر",       key: "orderNumber", width: 16 },
-    { header: "نوع الفاتورة",       key: "type",        width: 20 },
-    { header: "التاريخ والوقت",     key: "datetime",    width: 28 },
-    { header: "عدد مرات الطباعة",  key: "count",       width: 20 },
-    { header: "مكرر؟",             key: "isDup",       width: 12 },
+    { header: "رقم الأوردر",      key: "orderNumber", width: 16 },
+    { header: "نوع الفاتورة",      key: "type",        width: 20 },
+    { header: "التاريخ والوقت",    key: "datetime",    width: 28 },
+    { header: "عدد مرات الطباعة", key: "count",       width: 20 },
   ];
   for (const e of filteredLogs) {
-    const count = printCounts[e.orderNumber] || 1;
     ws.addRow({
       orderNumber: `#${e.orderNumber}`,
       type:        e.type === "S2" ? "استبدال/استرجاع" : "أوردر عادي",
       datetime:    formatDateTime(e.timestamp),
-      count,
-      isDup:       count > 1 ? "نعم" : "لا",
+      count:       logCounts[e.orderNumber] || 1,
     });
   }
   const today  = new Date().toISOString().slice(0, 10);
@@ -908,38 +1006,28 @@ async function exportLogsXLSX() {
 // ══════════════════════════════════════════════════════════════════════════════
 function renderS1Invoice(inv) {
   const numericId = inv.id.replace("gid://shopify/Order/", "");
-  const date      = formatInvoiceDate(inv.createdAt);
   const isPrepaid = inv.isPrepaid;
-
   const lineItemsHTML = inv.lineItems.map(li => {
-    let priceCell;
-    if (isPrepaid) {
-      priceCell = `<s>${money(li.discountedPrice)}</s>`;
-    } else if (li.originalPrice !== li.discountedPrice) {
-      priceCell = `<span style="font-weight:400;font-size:12px;"><s>${money(li.originalPrice)}</s></span><br/>${money(li.discountedPrice)}`;
-    } else {
-      priceCell = money(li.discountedPrice);
-    }
+    let pc;
+    if (isPrepaid) { pc = `<s>${money(li.discountedPrice)}</s>`; }
+    else if (li.originalPrice !== li.discountedPrice) {
+      pc = `<span style="font-weight:400;font-size:12px;"><s>${money(li.originalPrice)}</s></span><br/>${money(li.discountedPrice)}`;
+    } else { pc = money(li.discountedPrice); }
     return `<tr>
       <td style="border:1px solid #000;padding:10px 8px;text-align:center;">${li.quantity}</td>
       <td style="border:1px solid #000;padding:10px 8px;text-align:center;overflow-wrap:anywhere;word-break:break-word;">${escHtml(li.title)}</td>
       <td style="border:1px solid #000;padding:10px 8px;text-align:center;">${li.sku||"—"}</td>
-      <td style="border:1px solid #000;padding:10px 8px;text-align:center;">${priceCell}</td>
+      <td style="border:1px solid #000;padding:10px 8px;text-align:center;">${pc}</td>
     </tr>`;
   }).join("");
-
   const shippingCell = isPrepaid ? `<s>${money(inv.shippingPrice)}</s>` : money(inv.shippingPrice);
   const totalCell    = isPrepaid
     ? `<div><s>${money(inv.totalPrice)}</s></div><div>${money(inv.totalOutstanding)}</div>`
     : money(inv.totalPrice);
-  const refundedRow  = inv.totalRefunded > 0
-    ? `<tr>
-        <td colspan="3" style="border:1px solid #000;padding:10px 8px;text-align:right;">Total Refunded</td>
-        <td style="border:1px solid #000;padding:10px 8px;text-align:right;">-${money(inv.totalRefunded)}</td>
-      </tr>` : "";
-
+  const refundedRow = inv.totalRefunded > 0
+    ? `<tr><td colspan="3" style="border:1px solid #000;padding:10px 8px;text-align:right;">Total Refunded</td><td style="border:1px solid #000;padding:10px 8px;text-align:right;">-${money(inv.totalRefunded)}</td></tr>` : "";
   return `<div class="invoice-page">
-    ${renderInvoiceHeader("Invoice", date)}
+    ${renderInvoiceHeader("Invoice", formatInvoiceDate(inv.createdAt))}
     ${renderBarcode(numericId, inv.name)}
     ${renderAddressSection(inv)}
     ${renderNotesSection(inv)}
@@ -950,16 +1038,9 @@ function renderS1Invoice(inv) {
         <th style="border:1px solid #000;padding:10px 8px;width:140px;text-align:center;">SKU</th>
         <th style="border:1px solid #000;padding:10px 8px;width:90px;text-align:center;">Price</th>
       </tr></thead>
-      <tbody>
-        ${lineItemsHTML}
-        <tr>
-          <td colspan="3" style="border:1px solid #000;padding:10px 8px;text-align:right;">Shipping</td>
-          <td style="border:1px solid #000;padding:10px 8px;text-align:center;">${shippingCell}</td>
-        </tr>
-        <tr>
-          <td colspan="3" style="border:1px solid #000;padding:12px 8px;text-align:right;font-size:18px;font-weight:700;">Total</td>
-          <td style="border:1px solid #000;padding:12px 8px;text-align:center;font-size:18px;font-weight:700;">${totalCell}</td>
-        </tr>
+      <tbody>${lineItemsHTML}
+        <tr><td colspan="3" style="border:1px solid #000;padding:10px 8px;text-align:right;">Shipping</td><td style="border:1px solid #000;padding:10px 8px;text-align:center;">${shippingCell}</td></tr>
+        <tr><td colspan="3" style="border:1px solid #000;padding:12px 8px;text-align:right;font-size:18px;font-weight:700;">Total</td><td style="border:1px solid #000;padding:12px 8px;text-align:center;font-size:18px;font-weight:700;">${totalCell}</td></tr>
         ${refundedRow}
       </tbody>
     </table>
@@ -969,8 +1050,6 @@ function renderS1Invoice(inv) {
 
 function renderS2Invoice(inv) {
   const numericId = inv.id.replace("gid://shopify/Order/", "");
-  const date      = formatInvoiceDate(inv.createdAt);
-
   const exchangeHTML = inv.exchangeItems.length > 0 ? `
     <table style="margin-top:16px;width:100%;border-collapse:collapse;border:1px solid #000;table-layout:fixed;font-size:14px;font-weight:700;">
       <thead><tr>
@@ -991,7 +1070,6 @@ function renderS2Invoice(inv) {
         </tr>`;
       }).join("")}</tbody>
     </table>` : "";
-
   const returnHTML = inv.returnItems.length > 0 ? `
     <table style="margin-top:16px;width:100%;border-collapse:collapse;border:1px solid #000;table-layout:fixed;font-size:14px;font-weight:700;">
       <thead><tr>
@@ -1021,11 +1099,9 @@ function renderS2Invoice(inv) {
       </tr></thead>
       <tbody><tr><td colspan="4" style="border:1px solid #000;padding:10px 8px;text-align:center;">No return items found for this order.</td></tr></tbody>
     </table>`;
-
   const returnShipping = inv.returnShippingFees != null ? money(inv.returnShippingFees) : "—";
-
   return `<div class="invoice-page">
-    ${renderInvoiceHeader("Return / Exchange Invoice", date)}
+    ${renderInvoiceHeader("Return / Exchange Invoice", formatInvoiceDate(inv.createdAt))}
     ${renderBarcode(numericId, inv.name)}
     ${renderAddressSection(inv)}
     ${renderNotesSection(inv)}
@@ -1033,14 +1109,8 @@ function renderS2Invoice(inv) {
     ${returnHTML}
     <table style="margin:1em 0 0 0;width:100%;border-collapse:collapse;table-layout:fixed;font-size:14px;font-weight:700;border:1px solid #000;">
       <tbody>
-        <tr>
-          <td style="border:1px solid #000;padding:10px 8px;text-align:right;">Return shipping</td>
-          <td style="border:1px solid #000;padding:10px 8px;text-align:right;width:140px;">${returnShipping}</td>
-        </tr>
-        <tr>
-          <td style="border:1px solid #000;padding:12px 8px;text-align:right;font-size:18px;font-weight:700;">Total</td>
-          <td style="border:1px solid #000;padding:12px 8px;text-align:right;width:140px;font-size:18px;font-weight:700;">${money(inv.totalDue)}</td>
-        </tr>
+        <tr><td style="border:1px solid #000;padding:10px 8px;text-align:right;">Return shipping</td><td style="border:1px solid #000;padding:10px 8px;text-align:right;width:140px;">${returnShipping}</td></tr>
+        <tr><td style="border:1px solid #000;padding:12px 8px;text-align:right;font-size:18px;font-weight:700;">Total</td><td style="border:1px solid #000;padding:12px 8px;text-align:right;width:140px;font-size:18px;font-weight:700;">${money(inv.totalDue)}</td></tr>
       </tbody>
     </table>
     ${renderFooter()}
@@ -1076,33 +1146,27 @@ function renderAddressSection(inv) {
     ["Email", inv.email||"—"],
   ].filter(Boolean);
   const addrRows = rows.map(([l,v]) =>
-    `<tr>
-      <td style="width:140px;padding:6px 8px;border:1px solid #000;"><strong>${l}</strong></td>
-      <td style="padding:6px 8px;border:1px solid #000;font-weight:700;">${escHtml(v)}</td>
-    </tr>`).join("");
+    `<tr><td style="width:140px;padding:6px 8px;border:1px solid #000;"><strong>${l}</strong></td><td style="padding:6px 8px;border:1px solid #000;font-weight:700;">${escHtml(v)}</td></tr>`
+  ).join("");
   return `<div style="margin-top:0.5em;display:flex;gap:24px;justify-content:space-between;align-items:stretch;">
     <div style="flex:1 1 60%;text-align:left;">
-      <table style="width:100%;border-collapse:collapse;margin-top:8px;font-size:13px;">
-        <tbody>${addrRows}</tbody>
-      </table>
+      <table style="width:100%;border-collapse:collapse;margin-top:8px;font-size:13px;"><tbody>${addrRows}</tbody></table>
     </div>
     <div style="flex:1 1 35%;text-align:left;">
-      <table style="width:100%;border-collapse:collapse;font-size:13px;margin-top:22px;">
-        <tbody>
-          <tr><td style="width:95px;padding:18px 8px;border:1px solid #000;white-space:nowrap;"><strong>1st Call</strong></td><td style="padding:18px 10px;border:1px solid #000;"></td></tr>
-          <tr><td style="width:95px;padding:18px 8px;border:1px solid #000;white-space:nowrap;"><strong>2nd Call</strong></td><td style="padding:18px 10px;border:1px solid #000;"></td></tr>
-          <tr><td style="width:95px;padding:18px 8px;border:1px solid #000;white-space:nowrap;"><strong>3rd Call</strong></td><td style="padding:18px 10px;border:1px solid #000;"></td></tr>
-        </tbody>
-      </table>
+      <table style="width:100%;border-collapse:collapse;font-size:13px;margin-top:22px;"><tbody>
+        <tr><td style="width:95px;padding:18px 8px;border:1px solid #000;white-space:nowrap;"><strong>1st Call</strong></td><td style="padding:18px 10px;border:1px solid #000;"></td></tr>
+        <tr><td style="width:95px;padding:18px 8px;border:1px solid #000;white-space:nowrap;"><strong>2nd Call</strong></td><td style="padding:18px 10px;border:1px solid #000;"></td></tr>
+        <tr><td style="width:95px;padding:18px 8px;border:1px solid #000;white-space:nowrap;"><strong>3rd Call</strong></td><td style="padding:18px 10px;border:1px solid #000;"></td></tr>
+      </tbody></table>
     </div>
   </div>`;
 }
 function renderNotesSection(inv) {
   const hasNote  = inv.note && inv.note.trim();
   const hasAttrs = inv.customAttributes && inv.customAttributes.length > 0;
-  const noteContent  = hasNote ? `<p style="margin:6px 0 0 0;font-size:14px;font-weight:700;line-height:1.2;">${escHtml(inv.note)}</p>` : "";
-  const attrsContent = hasAttrs ? `<div style="margin-top:8px;font-size:13px;">${inv.customAttributes.map(a=>`<div>${escHtml(a.key)}: ${escHtml(a.value)}</div>`).join("")}</div>` : "";
-  const content = hasNote || hasAttrs ? noteContent + attrsContent : `<p style="margin:6px 0 0 0;">—</p>`;
+  const nc = hasNote ? `<p style="margin:6px 0 0 0;font-size:14px;font-weight:700;line-height:1.2;">${escHtml(inv.note)}</p>` : "";
+  const ac = hasAttrs ? `<div style="margin-top:8px;font-size:13px;">${inv.customAttributes.map(a=>`<div>${escHtml(a.key)}: ${escHtml(a.value)}</div>`).join("")}</div>` : "";
+  const content = hasNote || hasAttrs ? nc + ac : `<p style="margin:6px 0 0 0;">—</p>`;
   return `<div style="margin-top:1em;border:1px solid #000;padding:10px 12px;"><strong>Order Notes</strong><br/>${content}</div>`;
 }
 function renderFooter() {
@@ -1124,7 +1188,7 @@ function renderFooter() {
 // ══════════════════════════════════════════════════════════════════════════════
 function money(n) {
   const v = parseFloat(n) || 0;
-  return v % 1 === 0 ? v.toLocaleString("en-US") : v.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  return v % 1 === 0 ? v.toLocaleString("en-US") : v.toLocaleString("en-US", { minimumFractionDigits:2, maximumFractionDigits:2 });
 }
 function escHtml(s) {
   if (!s) return "";
