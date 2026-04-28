@@ -1068,14 +1068,14 @@ async function exportLogsXLSX() {
 function renderS1Invoice(inv) {
   const numericId = inv.id.replace("gid://shopify/Order/", "");
   const isPrepaid = inv.isPrepaid;
-  const lineItemsHTML = inv.lineItems.map(li => {
+  const lineItemsHTML = inv.lineItems.filter(li => li.currentQuantity > 0).map(li => {
     let pc;
     if (isPrepaid) { pc = `<s>${money(li.discountedPrice)}</s>`; }
     else if (li.originalPrice !== li.discountedPrice) {
       pc = `<span style="font-weight:400;font-size:12px;"><s>${money(li.originalPrice)}</s></span><br/>${money(li.discountedPrice)}`;
     } else { pc = money(li.discountedPrice); }
     return `<tr>
-      <td style="border:1px solid #000;padding:10px 8px;text-align:center;">${li.quantity}</td>
+      <td style="border:1px solid #000;padding:10px 8px;text-align:center;">${li.currentQuantity}</td>
       <td style="border:1px solid #000;padding:10px 8px;text-align:center;overflow-wrap:anywhere;word-break:break-word;">
         ${escHtml(li.title)}
         ${(li.discountAllocations && li.discountAllocations.length > 0)
